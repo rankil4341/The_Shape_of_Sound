@@ -81,6 +81,7 @@ public class PlayerController2D : MonoBehaviour
     public float wallSlideMaxFall = -3f;
     public float wallJumpHSpeed = 12f;
     public float wallJumpForceTime = 0.15f;
+    public float wallJumpFacingTime = 0.2f;   // v7: 蹬墙跳后朝向锁定时长（秒），期间按键不改朝向
 
     [Header("地面检测")]
     public float groundCastDistance = 0.08f;
@@ -109,6 +110,7 @@ public class PlayerController2D : MonoBehaviour
     float varJumpTimer;
     float currentJumpSpeed;
     float wallForceTimer;
+    float wallFacingTimer;                  // v7: 朝向锁剩余时间（>0 时按键不改朝向）
     float groundDashJumpTimer;      // v6: >0 = 刚结束一次地面冲刺（超级跳窗口）
     int wallDir;
 
@@ -143,6 +145,7 @@ public class PlayerController2D : MonoBehaviour
         dashRefillTimer -= dt;
         dashBufferTimer -= dt;          // v6: 冲刺缓冲计时
         wallForceTimer -= dt;
+        wallFacingTimer -= dt;              // v7: 朝向锁倒计时
         groundDashJumpTimer -= dt;
 
         // ---- 1. 方向输入（A+D 同按取后按方向）----
@@ -270,7 +273,7 @@ public class PlayerController2D : MonoBehaviour
         }
 
         // ---- 13. 朝向 ----
-        if (dir != 0 && sr != null) sr.flipX = dir < 0;
+        if (dir != 0 && wallFacingTimer <= 0f && sr != null) sr.flipX = dir < 0;   // v7: 朝向锁期间不响应按键
     }
 
     // 地面普通跳：带水平冲量（v6）
@@ -307,6 +310,7 @@ public class PlayerController2D : MonoBehaviour
         dashAvailable = true;
         jumpBufferTimer = 0f;
         if (sr != null) sr.flipX = wallDirSide == 1;
+        wallFacingTimer = wallJumpFacingTime;   // v7: 锁住朝向，防止同帧第 13 步把它改回去
     }
 
     void StartDash(Vector2 d)
